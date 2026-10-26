@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# origin-health-check: checks the TLS certificates served by the origin and the disk usage
+# of a Docker host behind a CDN, and reports to an Uptime Kuma push monitor.
+# https://github.com/SimoneCerruti/origin-health-check
+# shellcheck source-path=SCRIPTDIR
+set -Eeuo pipefail
+
+OHC_HOME="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+
+# shellcheck source=lib/common.sh
+source "$OHC_HOME/lib/common.sh"
+# shellcheck source=lib/checks.sh
+source "$OHC_HOME/lib/checks.sh"
+# shellcheck source=lib/commands.sh
+source "$OHC_HOME/lib/commands.sh"
+
+usage() {
+  cat <<EOF
+origin-health-check $(ohc_version) - origin TLS certificates and disk usage, reported to Uptime Kuma
+
+Usage: origin-health-check <command> [options]
+
+Checks
+  run [--dry-run] [--expiry-days N] [domain...]
+                          Run all checks and report the result to the push monitor
+                            --dry-run         do not push the result
+                            --expiry-days N   override EXPIRY_DAYS for this run
+                            domain...         check only these domains (disk is always checked)
+  status                  Show version, schedule, configuration summary and recent events
+
+Setup
+  schedule enable|disable|status
+                          Manage the cron schedule (SCHEDULE in the config)
+
+Maintenance
+  self-update [--version X.Y.Z | --ref BRANCH]
+                          Update origin-health-check itself
+  version                 Print the installed version
+  help                    Show this help
+
+Config file: $OHC_CONFIG (override with ORIGIN_HEALTH_CHECK_CONFIG)
+EOF
+}
+
+main() {
+  local command="${1:-help}"
+  shift || true
+
+  case "$command" in
+    run)                  cmd_run "$@" ;;
+    status)               cmd_status ;;
+    schedule)             cmd_schedule "$@" ;;
+    self-update)          cmd_self_update "$@" ;;
+    version|--version|-v) ohc_version ;;
+    help|--help|-h)       usage ;;
+    *)
+      usage >&2
+      exit "$EXIT_USAGE"
+      ;;
+  esac
+}
+
+main "$@"

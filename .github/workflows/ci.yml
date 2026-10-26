@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Syntax check
+        run: |
+          for file in origin-health-check install.sh lib/*.sh tests/run.sh origin-health-check.conf.example; do
+            bash -n "$file"
+          done
+
+      - name: ShellCheck
+        run: shellcheck -x origin-health-check install.sh lib/*.sh tests/run.sh
+
+      - name: Smoke tests
+        run: bash tests/run.sh

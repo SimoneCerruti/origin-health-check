@@ -1,0 +1,43 @@
+# origin-health-check configuration (bash syntax).
+# Installed once to /etc/origin-health-check/origin-health-check.conf and never overwritten.
+# Every setting has a default: remove a line to use it.
+
+# --- Monitoring: Uptime Kuma push URL ---
+# Up to the token, WITHOUT the "?status=up&msg=OK&ping=" Kuma shows: status and msg are appended.
+# Prefer the local endpoint when Kuma runs on this host (no CDN or DNS in the way), e.g.
+#   http://127.0.0.1:3001/api/push/<token>
+# Use a Push monitor with a heartbeat interval longer than the schedule interval (e.g. 25200 for 6h).
+# Empty: results are only logged.
+PUSH_URL=""
+
+# --- Origin: where the certificates are checked, bypassing the CDN ---
+ORIGIN_HOST="127.0.0.1"
+ORIGIN_PORT=443
+# Seconds allowed for each TLS connection
+CONNECT_TIMEOUT=15
+
+# --- Thresholds ---
+# Alert when a certificate expires in less than this many days.
+# Traefik and certbot renew Let's Encrypt certificates 30 days before expiry,
+# so 20 means renewal has been failing for about 10 days.
+EXPIRY_DAYS=20
+# Alert when usage is above this percentage
+DISK_THRESHOLD=85
+DISK_PATHS=(
+  /
+)
+
+# --- Domains: every hostname the origin must serve a valid certificate for ---
+# Include redirect sources too (e.g. www): with a strict SNI policy a missing certificate
+# breaks the redirect even when the target works.
+DOMAINS=(
+  # example.com
+  # www.example.com
+)
+
+# --- Schedule (cron syntax) ---
+# Apply changes with: sudo origin-health-check schedule enable
+SCHEDULE="15 */6 * * *"
+
+# --- Logs ---
+LOG_DIR="/var/log/origin-health-check"

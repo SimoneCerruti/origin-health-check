@@ -1,0 +1,3 @@
+# Real configuration and secrets never belong in the repository
+origin-health-check.conf
+*.log
